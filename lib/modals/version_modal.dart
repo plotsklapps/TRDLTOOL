@@ -40,7 +40,16 @@ class VersionModal extends StatelessWidget {
             const Divider(),
             ListTile(
               onTap: _launchGitHub,
-              leading: const Icon(LucideIcons.github),
+              leading: const Icon(LucideIcons.fileCodeCorner),
+              title: const Text('Versie 0.0.2+4 20260507'),
+              subtitle: const Text(
+                '- Flutter naar stable channel (3.41.9);\n'
+                '- Dependencies geupgraded.',
+              ),
+            ),
+            ListTile(
+              onTap: _launchGitHub,
+              leading: const Icon(LucideIcons.fileCodeCorner),
               title: const Text('Versie 0.0.2+3 20260226'),
               subtitle: const Text(
                 '- Flutter upgrade naar beta channel;\n'
@@ -51,7 +60,7 @@ class VersionModal extends StatelessWidget {
             ),
             ListTile(
               onTap: _launchGitHub,
-              leading: const Icon(LucideIcons.github),
+              leading: const Icon(LucideIcons.fileCodeCorner),
               title: const Text('Versie 0.0.2+2 20260212'),
               subtitle: const Text(
                 '- Flutter upgrade 3.41.0',
@@ -59,7 +68,7 @@ class VersionModal extends StatelessWidget {
             ),
             ListTile(
               onTap: _launchGitHub,
-              leading: const Icon(LucideIcons.github),
+              leading: const Icon(LucideIcons.fileCodeCorner),
               title: const Text('Versie 0.0.2+1 20260210'),
               subtitle: const Text(
                 '- Realtime Database beveiligingsregels aangepast;\n'
@@ -68,7 +77,7 @@ class VersionModal extends StatelessWidget {
             ),
             ListTile(
               onTap: _launchGitHub,
-              leading: const Icon(LucideIcons.github),
+              leading: const Icon(LucideIcons.fileCodeCorner),
               title: const Text('Versie 0.0.2+0 20260210'),
               subtitle: const Text(
                 '- README.md aangepast;\n'
@@ -80,7 +89,7 @@ class VersionModal extends StatelessWidget {
             ),
             ListTile(
               onTap: _launchGitHub,
-              leading: const Icon(LucideIcons.github),
+              leading: const Icon(LucideIcons.fileCodeCorner),
               title: const Text('Versie 0.0.1+9 20260124'),
               subtitle: const Text(
                 '- Actieve beller blijft nu zichtbaar;\n'
@@ -90,7 +99,7 @@ class VersionModal extends StatelessWidget {
             ),
             ListTile(
               onTap: _launchGitHub,
-              leading: const Icon(LucideIcons.github),
+              leading: const Icon(LucideIcons.fileCodeCorner),
               title: const Text('Versie 0.0.1+8 20260122'),
               subtitle: const Text(
                 '- Flutter downgrade naar 3.38 (stable);\n'
@@ -100,19 +109,19 @@ class VersionModal extends StatelessWidget {
             ),
             ListTile(
               onTap: _launchGitHub,
-              leading: const Icon(LucideIcons.github),
+              leading: const Icon(LucideIcons.fileCodeCorner),
               title: const Text('Versie 0.0.1+7 20260107'),
               subtitle: const Text('- Flutter upgrade naar 3.40 (master).'),
             ),
             ListTile(
               onTap: _launchGitHub,
-              leading: const Icon(LucideIcons.github),
+              leading: const Icon(LucideIcons.fileCodeCorner),
               title: const Text('Versie 0.0.1+6 20251129'),
               subtitle: const Text('- Dependencies geupgraded.'),
             ),
             ListTile(
               onTap: _launchGitHub,
-              leading: const Icon(LucideIcons.github),
+              leading: const Icon(LucideIcons.fileCodeCorner),
               title: const Text('Versie 0.0.1+5 20251025'),
               subtitle: const Text(
                 '- Refactored naar very_good_analysis;\n'
@@ -123,7 +132,7 @@ class VersionModal extends StatelessWidget {
             ),
             ListTile(
               onTap: _launchGitHub,
-              leading: const Icon(LucideIcons.github),
+              leading: const Icon(LucideIcons.fileCodeCorner),
               title: const Text('Versie 0.0.1+4 20251023'),
               subtitle: const Text(
                 '- flutter_lints ingewisseld voor very_good_analysis;\n'
@@ -133,7 +142,7 @@ class VersionModal extends StatelessWidget {
             ),
             ListTile(
               onTap: _launchGitHub,
-              leading: const Icon(LucideIcons.github),
+              leading: const Icon(LucideIcons.fileCodeCorner),
               title: const Text('Versie 0.0.1+3 20251016'),
               subtitle: const Text(
                 "- Thema's en letterypen aanpasbaar;\n"
@@ -144,7 +153,7 @@ class VersionModal extends StatelessWidget {
             ),
             ListTile(
               onTap: _launchGitHub,
-              leading: const Icon(LucideIcons.github),
+              leading: const Icon(LucideIcons.fileCodeCorner),
               title: const Text('Versie 0.0.1+2 20250909'),
               subtitle: const Text(
                 '- Geluiden toegevoegd (just_audio);\n'
@@ -154,7 +163,7 @@ class VersionModal extends StatelessWidget {
             ),
             ListTile(
               onTap: _launchGitHub,
-              leading: const Icon(LucideIcons.github),
+              leading: const Icon(LucideIcons.fileCodeCorner),
               title: const Text('Versie 0.0.1+1 20250707'),
               subtitle: const Text('- Eerste release.'),
             ),
