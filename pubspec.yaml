@@ -22,7 +22,7 @@ dependencies:
   logger: ^2.6.1
   lucide_icons_flutter: ^3.1.4
   package_info_plus: ^10.1.0
-  signals: ^6.0.2
+  signals: ^7.0.0
   toastification: ^3.0.3
   url_launcher: ^6.3.2
   wakelock_plus: ^1.4.0
