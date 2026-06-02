@@ -44,6 +44,7 @@ class VersionModal extends SignalWidget {
               leading: const Icon(LucideIcons.fileCodeCorner),
               title: const Text('Versie 0.0.2+5 20260602'),
               subtitle: const Text(
+                '- Flutter upgrade naar 3.44.1.\n'
                 '- Dependencies geupgraded.\n'
                 '- Rewrite / Refactor van Signals package.\n'
                 '- HOOFDLETTERS hint toegevoegd.',
