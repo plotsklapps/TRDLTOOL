@@ -4,13 +4,13 @@ import 'package:signals/signals_flutter.dart';
 import 'package:trdltool/signals/themecolor_signal.dart';
 import 'package:trdltool/theme/flex_theme.dart';
 
-class ThemeColorCarousel extends StatelessWidget {
+class ThemeColorCarousel extends SignalWidget {
   const ThemeColorCarousel({super.key});
 
   @override
   Widget build(BuildContext context) {
     const List<FlexScheme> schemes = FlexScheme.values;
-    final FlexScheme selectedScheme = sThemeColor.watch(context);
+    final FlexScheme selectedScheme = sThemeColor.value;
 
     return SizedBox(
       height: 140,
@@ -25,10 +25,10 @@ class ThemeColorCarousel extends StatelessWidget {
           for (final FlexScheme scheme in schemes)
             Container(
               decoration: BoxDecoration(
-                color: cThemeData.watch(context).colorScheme.surfaceDim,
+                color: cThemeData.value.colorScheme.surfaceDim,
                 border: Border.all(
                   color: scheme == selectedScheme
-                      ? cThemeData.watch(context).colorScheme.primary
+                      ? cThemeData.value.colorScheme.primary
                       : Colors.transparent,
                   width: 4,
                 ),
@@ -101,7 +101,7 @@ class ThemeColorCarousel extends StatelessWidget {
                       fontWeight: scheme == selectedScheme
                           ? FontWeight.bold
                           : FontWeight.normal,
-                      color: cThemeData.watch(context).colorScheme.primary,
+                      color: cThemeData.value.colorScheme.primary,
                     ),
                   ),
                 ],

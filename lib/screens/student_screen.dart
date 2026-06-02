@@ -18,7 +18,7 @@ import 'package:trdltool/widgets/mcn_call_sheet.dart';
 import 'package:trdltool/widgets/mute_button.dart';
 import 'package:trdltool/widgets/phone_button.dart';
 
-class StudentScreen extends StatefulWidget {
+class StudentScreen extends SignalStatefulWidget {
   const StudentScreen({super.key});
 
   @override
@@ -168,7 +168,7 @@ class _StudentScreenState extends State<StudentScreen> {
         return Scaffold(
           appBar: AppBar(
             title: Text(
-              'LEERLING GRI ${sCodeLeerling.watch(context)}',
+              'LEERLING GRI ${sCodeLeerling.value}',
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             centerTitle: true,

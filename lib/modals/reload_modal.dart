@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:signals/signals_flutter.dart';
 import 'package:trdltool/signals/version_signal.dart';
 import 'package:web/web.dart' as web;
 
-class ReloadModal extends StatelessWidget {
+class ReloadModal extends SignalWidget {
   const ReloadModal({super.key});
 
   @override

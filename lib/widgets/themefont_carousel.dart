@@ -4,13 +4,13 @@ import 'package:signals/signals_flutter.dart';
 import 'package:trdltool/signals/themefont_signal.dart';
 import 'package:trdltool/theme/flex_theme.dart';
 
-class ThemeFontCarousel extends StatelessWidget {
+class ThemeFontCarousel extends SignalWidget {
   const ThemeFontCarousel({super.key});
 
   @override
   Widget build(BuildContext context) {
     final List<String> fontNames = sThemeFontList.value;
-    final String selectedFont = sThemeFont.watch(context);
+    final String selectedFont = sThemeFont.value;
 
     return SizedBox(
       height: 140,
@@ -26,10 +26,10 @@ class ThemeFontCarousel extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
               decoration: BoxDecoration(
-                color: cThemeData.watch(context).colorScheme.surfaceDim,
+                color: cThemeData.value.colorScheme.surfaceDim,
                 border: Border.all(
                   color: fontKey == selectedFont
-                      ? cThemeData.watch(context).colorScheme.primary
+                      ? cThemeData.value.colorScheme.primary
                       : Colors.transparent,
                   width: 4,
                 ),
@@ -43,10 +43,8 @@ class ThemeFontCarousel extends StatelessWidget {
                     child: Center(
                       child: Builder(
                         builder: (BuildContext context) {
-                          final Color color = cThemeData
-                              .watch(context)
-                              .colorScheme
-                              .onSurface;
+                          final Color color =
+                              cThemeData.value.colorScheme.onSurface;
                           TextStyle previewStyle;
                           switch (fontKey) {
                             case 'openSans':
@@ -238,7 +236,7 @@ class ThemeFontCarousel extends StatelessWidget {
                       fontWeight: fontKey == selectedFont
                           ? FontWeight.bold
                           : FontWeight.normal,
-                      color: cThemeData.watch(context).colorScheme.primary,
+                      color: cThemeData.value.colorScheme.primary,
                     ),
                   ),
                 ],

@@ -5,7 +5,7 @@ import 'package:trdltool/screens/teacher_screen.dart';
 import 'package:trdltool/services/database_service.dart';
 import 'package:trdltool/services/timer_service.dart';
 
-class CreateGRIScreen extends StatelessWidget {
+class CreateGRIScreen extends SignalWidget {
   const CreateGRIScreen({super.key});
 
   @override
@@ -28,7 +28,7 @@ class CreateGRIScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 Text(
-                  _formatTime(sTimer.watch(context)),
+                  _formatTime(sTimer.value),
                   style: const TextStyle(fontSize: 20, color: Colors.red),
                 ),
                 const SizedBox(width: 36),
@@ -40,12 +40,13 @@ class CreateGRIScreen extends StatelessWidget {
             ),
             const SizedBox(height: 18),
             const Text(
-              'Geef onderstaande code aan de leerling\nen druk op de button.',
+              'Geef onderstaande code aan de leerling\nen druk op de button.'
+              '\n\nLet op HOOFDLETTERS.',
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 18),
             Text(
-              sCodeOpleider.watch(context),
+              sCodeOpleider.value,
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
             ),
@@ -54,19 +55,21 @@ class CreateGRIScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 InkWell(
-                  onTap: () {
-                    databaseService.saveCodeToDatabase();
+                  onTap: () async {
+                    await databaseService.saveCodeToDatabase();
 
                     timerService.cancelTimer();
 
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute<void>(
-                        builder: (BuildContext context) {
-                          return const TeacherScreen();
-                        },
-                      ),
-                    );
+                    if (context.mounted) {
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(
+                          builder: (BuildContext context) {
+                            return const TeacherScreen();
+                          },
+                        ),
+                      );
+                    }
                   },
                   child: SizedBox(
                     width: 160,

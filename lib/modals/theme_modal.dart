@@ -6,7 +6,7 @@ import 'package:trdltool/signals/thememode_signal.dart';
 import 'package:trdltool/widgets/themecolor_carousel.dart';
 import 'package:trdltool/widgets/themefont_carousel.dart';
 
-class ThemeModal extends StatelessWidget {
+class ThemeModal extends SignalWidget {
   const ThemeModal({super.key});
 
   @override
@@ -39,7 +39,7 @@ class ThemeModal extends StatelessWidget {
                       label: Text('Donker'),
                     ),
                   ],
-                  selected: <ThemeMode>{sThemeMode.watch(context)},
+                  selected: <ThemeMode>{sThemeMode.value},
                   onSelectionChanged: (Set<ThemeMode> newSelection) {
                     sThemeMode.value = newSelection.first;
                   },

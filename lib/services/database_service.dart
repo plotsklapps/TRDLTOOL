@@ -11,13 +11,13 @@ import 'package:trdltool/services/timer_service.dart';
 // Create sCodeOpleider Signal.
 final Signal<String> sCodeOpleider = Signal<String>(
   'ABC00',
-  debugLabel: 'sCodeOpleider',
+  options: const SignalOptions<String>(name: 'sCodeOpleider'),
 );
 
 // Create sCodeLeerling Signal.
 final Signal<String> sCodeLeerling = Signal<String>(
   'ABC00',
-  debugLabel: 'sCodeLeering',
+  options: const SignalOptions<String>(name: 'sCodeLeerling'),
 );
 
 class DatabaseService {

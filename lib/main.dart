@@ -25,7 +25,7 @@ Future<void> main() async {
   runApp(const MainEntry());
 }
 
-class MainEntry extends StatelessWidget {
+class MainEntry extends SignalWidget {
   const MainEntry({super.key});
 
   @override
@@ -34,7 +34,7 @@ class MainEntry extends StatelessWidget {
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'TRDLtool',
-        theme: cThemeData.watch(context),
+        theme: cThemeData.value,
         home: const RoleChoiceScreen(),
       ),
     );

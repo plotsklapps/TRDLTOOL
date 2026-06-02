@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:signals/signals_flutter.dart';
 import 'package:trdltool/signals/version_signal.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class VersionModal extends StatelessWidget {
+class VersionModal extends SignalWidget {
   const VersionModal({super.key});
 
   static final Uri _githubUrl = Uri.parse(
@@ -38,6 +39,16 @@ class VersionModal extends StatelessWidget {
               ],
             ),
             const Divider(),
+            ListTile(
+              onTap: _launchGitHub,
+              leading: const Icon(LucideIcons.fileCodeCorner),
+              title: const Text('Versie 0.0.2+5 20260602'),
+              subtitle: const Text(
+                '- Dependencies geupgraded.\n'
+                '- Rewrite / Refactor van Signals package.\n'
+                '- HOOFDLETTERS hint toegevoegd.',
+              ),
+            ),
             ListTile(
               onTap: _launchGitHub,
               leading: const Icon(LucideIcons.fileCodeCorner),

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:signals/signals_flutter.dart';
 import 'package:trdltool/screens/student_screen.dart';
 import 'package:trdltool/services/database_service.dart';
 
-class ActivateGRIScreen extends StatelessWidget {
+class ActivateGRIScreen extends SignalWidget {
   const ActivateGRIScreen({super.key});
 
   @override
@@ -22,6 +23,11 @@ class ActivateGRIScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
+            const Text(
+              'Let op HOOFDLETTERS.',
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 18),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),
               child: TextField(
@@ -48,7 +54,7 @@ class ActivateGRIScreen extends StatelessWidget {
 
                 // Navigate to GedeeldeRuimteScreen if valid.
                 if (context.mounted && isValid) {
-                  Navigator.push(
+                  await Navigator.push(
                     context,
                     MaterialPageRoute<void>(
                       builder: (BuildContext context) {
@@ -58,11 +64,13 @@ class ActivateGRIScreen extends StatelessWidget {
                   );
                 } else {
                   debugPrint('Invalid code entered: ${sCodeLeerling.value}');
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Ongeldige code, probeer het opnieuw.'),
-                    ),
-                  );
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Ongeldige code, probeer het opnieuw.'),
+                      ),
+                    );
+                  }
                 }
               },
               child: SizedBox(

@@ -70,7 +70,7 @@ class _RoleChoiceScreenState extends State<RoleChoiceScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: <Widget>[
                 InkWell(
-                  onTap: () {
+                  onTap: () async {
                     // Set the user role property for analytics.
                     unawaited(
                       FirebaseAnalytics.instance.setUserProperty(
@@ -81,7 +81,7 @@ class _RoleChoiceScreenState extends State<RoleChoiceScreen> {
 
                     databaseService.generateCode();
 
-                    Navigator.push(
+                    await Navigator.push(
                       context,
                       MaterialPageRoute<void>(
                         builder: (BuildContext context) {
