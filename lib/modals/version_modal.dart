@@ -42,6 +42,15 @@ class VersionModal extends SignalWidget {
             ListTile(
               onTap: _launchGitHub,
               leading: const Icon(LucideIcons.fileCodeCorner),
+              title: const Text('Versie 0.0.2+6 20260809'),
+              subtitle: const Text(
+                '- Flutter upgrade naar 3.44.9.\n'
+                '- Dependencies geupgraded.',
+              ),
+            ),
+            ListTile(
+              onTap: _launchGitHub,
+              leading: const Icon(LucideIcons.fileCodeCorner),
               title: const Text('Versie 0.0.2+5 20260602'),
               subtitle: const Text(
                 '- Flutter upgrade naar 3.44.1.\n'
