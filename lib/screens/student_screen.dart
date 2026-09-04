@@ -7,10 +7,13 @@ import 'package:just_audio/just_audio.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:trdltool/logic/modal_logic.dart';
+import 'package:trdltool/modals/dei_modal.dart';
 import 'package:trdltool/modals/theme_modal.dart';
+import 'package:trdltool/models/dei_model.dart';
 import 'package:trdltool/services/database_service.dart';
 import 'package:trdltool/widgets/alarm_button.dart';
 import 'package:trdltool/widgets/alarm_call_sheet.dart';
+import 'package:trdltool/widgets/dei_button.dart';
 import 'package:trdltool/widgets/general_button.dart';
 import 'package:trdltool/widgets/general_call_sheet.dart';
 import 'package:trdltool/widgets/mcn_button.dart';
@@ -175,6 +178,13 @@ class _StudentScreenState extends State<StudentScreen> {
             actions: <Widget>[
               IconButton(
                 onPressed: () async {
+                  await showDeiModal(context: context, userRole: 'LEERLING');
+                },
+                icon: const Icon(LucideIcons.fileText),
+                tooltip: 'Nieuw Voorschrift (DEI)',
+              ),
+              IconButton(
+                onPressed: () async {
                   await showModal(context: context, child: const ThemeModal());
                 },
                 icon: const Icon(LucideIcons.menu),
@@ -207,6 +217,76 @@ class _StudentScreenState extends State<StudentScreen> {
                       ),
                     ),
                   ),
+                ),
+                StreamBuilder<DatabaseEvent>(
+                  stream: database
+                      .child('$formattedDate/${sCodeLeerling.value}/deis')
+                      .onValue,
+                  builder:
+                      (
+                        BuildContext context,
+                        AsyncSnapshot<DatabaseEvent> deiSnapshot,
+                      ) {
+                        final List<DeiModel> deiList = <DeiModel>[];
+                        if (deiSnapshot.hasData &&
+                            deiSnapshot.data?.snapshot.value != null) {
+                          final Map<dynamic, dynamic> rawMap =
+                              deiSnapshot.data!.snapshot.value!
+                                  as Map<dynamic, dynamic>;
+                          for (final MapEntry<dynamic, dynamic> entry
+                              in rawMap.entries) {
+                            if (entry.value is Map) {
+                              final DeiModel dei = DeiModel.fromMap(
+                                entry.key.toString(),
+                                Map<String, dynamic>.from(
+                                  entry.value as Map<dynamic, dynamic>,
+                                ),
+                              );
+                              if (dei.status != 'cancelled') {
+                                deiList.add(dei);
+                              }
+                            }
+                          }
+                          deiList.sort(
+                            (DeiModel a, DeiModel b) => b.id.compareTo(a.id),
+                          );
+                        }
+
+                        if (deiList.isEmpty) {
+                          return const SizedBox.shrink();
+                        }
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            const SizedBox(height: 12),
+                            const Text(
+                              'UITGEGEVEN VOORSCHRIFTEN (DEI)',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            ...deiList.map((DeiModel dei) {
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 8),
+                                child: DeiButton(
+                                  dei: dei,
+                                  userRole: 'LEERLING',
+                                  onTap: () async {
+                                    await showDeiModal(
+                                      context: context,
+                                      userRole: 'LEERLING',
+                                      existingDei: dei,
+                                    );
+                                  },
+                                ),
+                              );
+                            }),
+                          ],
+                        );
+                      },
                 ),
                 const SizedBox(height: 8),
                 Row(
@@ -292,10 +372,7 @@ class _StudentScreenState extends State<StudentScreen> {
                             databaseService: databaseService,
                           ),
                           const SizedBox(height: 8),
-                          MuteButton(
-                            isMuted: _isMuted,
-                            onTap: _toggleMute,
-                          ),
+                          MuteButton(isMuted: _isMuted, onTap: _toggleMute),
                         ],
                       ),
                     ),

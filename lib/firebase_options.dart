@@ -50,7 +50,6 @@ class DefaultFirebaseOptions {
     storageBucket: 'trdltoolapp.firebasestorage.app',
     measurementId: 'G-9NSWGM5G4D',
   );
-
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyDr1P36PJgAt3vOJAnhEGjvfxZ_j60d6dA',
     appId: '1:980242297725:android:5fbe7c551031d2143c1214',

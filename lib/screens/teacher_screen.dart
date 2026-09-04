@@ -7,10 +7,13 @@ import 'package:just_audio/just_audio.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:trdltool/logic/modal_logic.dart';
+import 'package:trdltool/modals/dei_modal.dart';
 import 'package:trdltool/modals/theme_modal.dart';
+import 'package:trdltool/models/dei_model.dart';
 import 'package:trdltool/services/database_service.dart';
 import 'package:trdltool/widgets/alarm_button.dart';
 import 'package:trdltool/widgets/alarm_call_sheet.dart';
+import 'package:trdltool/widgets/dei_button.dart';
 import 'package:trdltool/widgets/general_button.dart';
 import 'package:trdltool/widgets/general_call_sheet.dart';
 import 'package:trdltool/widgets/mcn_button.dart';
@@ -35,6 +38,156 @@ class _TeacherScreenState extends State<TeacherScreen> {
   final TextEditingController _mcnController = TextEditingController();
   final TextEditingController _alarmMcnController = TextEditingController();
   bool _isMuted = false;
+
+  final Set<String> _promptedDeiIds = <String>{};
+  final Set<String> _promptedIdNumDeiIds = <String>{};
+
+  void _handleDeiNotifications(List<DeiModel> deiList) {
+    for (final DeiModel dei in deiList) {
+      if (dei.status == 'isCalling' && !_promptedDeiIds.contains(dei.id)) {
+        _promptedDeiIds.add(dei.id);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          unawaited(_showIncomingDeiDialog(dei));
+        });
+      } else if (dei.status == 'id_sent' &&
+          !_promptedIdNumDeiIds.contains(dei.id)) {
+        _promptedIdNumDeiIds.add(dei.id);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          unawaited(_showIdentificatienummerDialog(dei));
+        });
+      }
+    }
+  }
+
+  Future<void> _showIncomingDeiDialog(DeiModel dei) async {
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: Row(
+            children: <Widget>[
+              Icon(
+                LucideIcons.fileText,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              const SizedBox(width: 8),
+              Text('Nieuwe DEI ${dei.deiType}'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text(
+                'Bestemd voor Trein ${dei.treinnummer}',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text('Traject: ${dei.emplacementVan} - ${dei.emplacementTot}'),
+              if (dei.kilometerVan.isNotEmpty)
+                Text('Kilometers: ${dei.kilometerVan} - ${dei.kilometerTot}'),
+              if (dei.bijzonderheden.isNotEmpty) ...<Widget>[
+                const SizedBox(height: 4),
+                Text('Bijzonderheden: ${dei.bijzonderheden}'),
+              ],
+            ],
+          ),
+          actions: <Widget>[
+            OutlinedButton(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+              },
+              child: const Text('Pauzeren / Later'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.pop(dialogContext);
+                await showDeiModal(
+                  context: context,
+                  userRole: 'OPLEIDER',
+                  existingDei: dei,
+                );
+              },
+              child: const Text('Aannemen'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _showIdentificatienummerDialog(DeiModel dei) async {
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Row(
+            children: <Widget>[
+              Icon(LucideIcons.keyRound, color: Colors.green),
+              SizedBox(width: 8),
+              Text('Identificatienummer'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Text(
+                'Identificatienummer voor DEI ${dei.deiType} '
+                '(Trein ${dei.treinnummer}):',
+                style: const TextStyle(fontSize: 14),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  dei.identificatienummer ?? '',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 2,
+                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Lees dit identificatienummer terug aan de TRDL.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontStyle: FontStyle.italic),
+              ),
+            ],
+          ),
+          actions: <Widget>[
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.pop(dialogContext);
+                await DatabaseService().updateDeiStatus(
+                  dei.id,
+                  'OPLEIDER',
+                  'completed',
+                );
+              },
+              child: const Text('Begrepen & Afgerond'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   void initState() {
@@ -210,6 +363,79 @@ class _TeacherScreenState extends State<TeacherScreen> {
                     ),
                   ),
                 ),
+                StreamBuilder<DatabaseEvent>(
+                  stream: database
+                      .child('$formattedDate/${sCodeOpleider.value}/deis')
+                      .onValue,
+                  builder:
+                      (
+                        BuildContext context,
+                        AsyncSnapshot<DatabaseEvent> deiSnapshot,
+                      ) {
+                        final List<DeiModel> deiList = <DeiModel>[];
+                        if (deiSnapshot.hasData &&
+                            deiSnapshot.data?.snapshot.value != null) {
+                          final Map<dynamic, dynamic> rawMap =
+                              deiSnapshot.data!.snapshot.value!
+                                  as Map<dynamic, dynamic>;
+                          for (final MapEntry<dynamic, dynamic> entry
+                              in rawMap.entries) {
+                            if (entry.value is Map) {
+                              final DeiModel dei = DeiModel.fromMap(
+                                entry.key.toString(),
+                                Map<String, dynamic>.from(
+                                  entry.value as Map<dynamic, dynamic>,
+                                ),
+                              );
+                              if (dei.status != 'completed' &&
+                                  dei.status != 'cancelled') {
+                                deiList.add(dei);
+                              }
+                            }
+                          }
+                          deiList.sort(
+                            (DeiModel a, DeiModel b) => b.id.compareTo(a.id),
+                          );
+                        }
+
+                        _handleDeiNotifications(deiList);
+
+                        if (deiList.isEmpty) {
+                          return const SizedBox.shrink();
+                        }
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            const SizedBox(height: 12),
+                            const Text(
+                              'ONTVANGEN VOORSCHRIFTEN (DEI)',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            ...deiList.map((DeiModel dei) {
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 8),
+                                child: DeiButton(
+                                  dei: dei,
+                                  userRole: 'OPLEIDER',
+                                  onTap: () async {
+                                    await showDeiModal(
+                                      context: context,
+                                      userRole: 'OPLEIDER',
+                                      existingDei: dei,
+                                    );
+                                  },
+                                ),
+                              );
+                            }),
+                          ],
+                        );
+                      },
+                ),
                 const SizedBox(height: 8),
                 Row(
                   children: <Widget>[
@@ -294,10 +520,7 @@ class _TeacherScreenState extends State<TeacherScreen> {
                             databaseService: databaseService,
                           ),
                           const SizedBox(height: 8),
-                          MuteButton(
-                            isMuted: _isMuted,
-                            onTap: _toggleMute,
-                          ),
+                          MuteButton(isMuted: _isMuted, onTap: _toggleMute),
                         ],
                       ),
                     ),

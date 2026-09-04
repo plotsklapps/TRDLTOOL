@@ -2,7 +2,7 @@ name: trdltool
 description: "TRDLtools. Specialized tools for rail professionals."
 publish_to: 'none'
 
-version: 0.0.2+6
+version: 0.0.2+7
 
 environment:
   sdk: ^3.8.1
@@ -32,7 +32,7 @@ dev_dependencies:
   flutter_launcher_icons: ^0.14.4
   flutter_test:
     sdk: flutter
-  very_good_analysis: ^10.0.0
+  very_good_analysis: ^11.0.0
 
 flutter:
   uses-material-design: true

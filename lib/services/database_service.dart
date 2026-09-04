@@ -86,10 +86,7 @@ class DatabaseService {
 
     // Save the initial button configurations.
     await _database.child('$formattedDate/${sCodeOpleider.value}').set(
-      <String, dynamic>{
-        ...codeData,
-        'buttons': buttons,
-      },
+      <String, dynamic>{...codeData, 'buttons': buttons},
     );
   }
 
@@ -187,5 +184,60 @@ class DatabaseService {
     await _database
         .child('$formattedDate/$code/buttons/$buttonName')
         .set(buttonData);
+  }
+
+  // DEI Operations.
+  Future<void> saveDei(Map<String, dynamic> deiMap, String callerRole) async {
+    final DateTime now = DateTime.now();
+    final String formattedDate = DateFormat('yyyy-MM-dd').format(now);
+    final String code = (callerRole == 'LEERLING')
+        ? sCodeLeerling.value
+        : sCodeOpleider.value;
+    final String deiId = deiMap['id'] as String;
+
+    unawaited(
+      FirebaseAnalytics.instance.logEvent(
+        name: 'dei_sent',
+        parameters: <String, Object>{
+          'dei_type': (deiMap['deiType'] as String?) ?? '',
+          'treinnummer': (deiMap['treinnummer'] as String?) ?? '',
+          'user_role': callerRole,
+        },
+      ),
+    );
+
+    await _database.child('$formattedDate/$code/deis/$deiId').set(deiMap);
+  }
+
+  Future<void> updateDeiStatus(
+    String deiId,
+    String callerRole,
+    String newStatus, {
+    String? identificatienummer,
+  }) async {
+    final DateTime now = DateTime.now();
+    final String formattedDate = DateFormat('yyyy-MM-dd').format(now);
+    final String code = (callerRole == 'LEERLING')
+        ? sCodeLeerling.value
+        : sCodeOpleider.value;
+
+    final Map<String, dynamic> updates = <String, dynamic>{'status': newStatus};
+    if (identificatienummer != null) {
+      updates['identificatienummer'] = identificatienummer;
+    }
+
+    await _database.child('$formattedDate/$code/deis/$deiId').update(updates);
+  }
+
+  Future<void> cancelDei(String deiId, String callerRole) async {
+    final DateTime now = DateTime.now();
+    final String formattedDate = DateFormat('yyyy-MM-dd').format(now);
+    final String code = (callerRole == 'LEERLING')
+        ? sCodeLeerling.value
+        : sCodeOpleider.value;
+
+    await _database.child('$formattedDate/$code/deis/$deiId').update(
+      <String, dynamic>{'status': 'cancelled'},
+    );
   }
 }
