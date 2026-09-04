@@ -293,11 +293,11 @@ class _DeiModalState extends State<DeiModal> {
 
     String headerTitle;
     if (_isDuplicating) {
-      headerTitle = 'Afgeven aan volgende MCN (Gekopieerd)';
+      headerTitle = 'Gekopieerde DEI';
     } else if (_isEditingCurrent) {
       headerTitle = 'DEI $_selectedDeiType Bewerken';
     } else if (_isCreationMode) {
-      headerTitle = 'Nieuw Voorschrift (DEI)';
+      headerTitle = 'Nieuwe DEI';
     } else {
       headerTitle =
           'DEI $_selectedDeiType - '
@@ -805,37 +805,9 @@ class _DeiModalState extends State<DeiModal> {
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          Row(
-            children: <Widget>[
-              Expanded(
-                child: _buildCustomTextField(
-                  controller: _kilometerVanController,
-                  labelText: 'Van/Bij Kilometer',
-                  hintText: 'bijv. 43.0',
-                  icon: LucideIcons.ruler,
-                  isReadOnly: isReadOnly,
-                  colorScheme: colorScheme,
-                  keyboardType: TextInputType.number,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildCustomTextField(
-                  controller: _kilometerTotController,
-                  labelText: 'Tot Kilometer',
-                  hintText: 'bijv. 43.8',
-                  icon: LucideIcons.ruler,
-                  isReadOnly: isReadOnly,
-                  colorScheme: colorScheme,
-                  keyboardType: TextInputType.number,
-                ),
-              ),
-            ],
-          ),
           const SizedBox(height: 16),
           const Text(
-            'Voor de overwegen (kilometrerings):',
+            'Voor de overweg(en):',
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
