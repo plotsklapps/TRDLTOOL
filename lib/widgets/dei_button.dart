@@ -14,6 +14,52 @@ class DeiButton extends StatelessWidget {
   final String userRole;
   final VoidCallback onTap;
 
+  String _getSummarySubtitle(DeiModel dei) {
+    switch (dei.deiType) {
+      case '1':
+        return dei.seinnummer != null && dei.seinnummer!.isNotEmpty
+            ? 'Sein ${dei.seinnummer}'
+            : 'Passeren stoptonend sein';
+      case '2':
+        final List<String> modes = <String>[];
+        if (dei.doorrijdenSR == true) modes.add('SR');
+        if (dei.doorrijdenSH == true) modes.add('SH');
+        return modes.isNotEmpty
+            ? 'Doorrijden in ${modes.join('/')}'
+            : 'Doorrijden na TRIP';
+      case '3':
+        return 'Stil blijven staan';
+      case '4':
+        return dei.ingetrokkenIdNummer != null &&
+                dei.ingetrokkenIdNummer!.isNotEmpty
+            ? 'Ingetrokken ID: ${dei.ingetrokkenIdNummer}'
+            : 'Intrekken DEI';
+      case '5':
+      case '6':
+        final String van = (dei.emplacementVan ?? '').toUpperCase();
+        final String tot = (dei.emplacementTot ?? '').toUpperCase();
+        final String km =
+            dei.kilometerVan != null && dei.kilometerVan!.isNotEmpty
+            ? ' (km ${dei.kilometerVan}-${dei.kilometerTot ?? ''})'
+            : '';
+        return '$van - $tot$km';
+      case '7':
+        final List<String> modes = <String>[];
+        if (dei.vertrekkenSR == true) modes.add('SR');
+        if (dei.vertrekkenSH == true) modes.add('SH');
+        return modes.isNotEmpty
+            ? 'Vertrekken in ${modes.join('/')}'
+            : 'Toestemming om te vertrekken';
+      case '8':
+        final String van = (dei.emplacementVan ?? '').toUpperCase();
+        final String tot = (dei.emplacementTot ?? '').toUpperCase();
+        final int count = dei.overwegen?.length ?? 0;
+        return '$van - $tot ($count overwegen)';
+      default:
+        return '';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final ColorScheme colorScheme = Theme.of(context).colorScheme;
@@ -21,12 +67,7 @@ class DeiButton extends StatelessWidget {
     final bool isCompleted = dei.status == 'completed';
 
     final String titleText = 'DEI ${dei.deiType} - Trein ${dei.treinnummer}';
-    final String kmText = dei.kilometerVan.isNotEmpty
-        ? ' (km ${dei.kilometerVan}-${dei.kilometerTot})'
-        : '';
-    final String routeText =
-        '${dei.emplacementVan.toUpperCase()} - '
-        '${dei.emplacementTot.toUpperCase()}$kmText';
+    final String summaryText = _getSummarySubtitle(dei);
 
     Color backgroundColor;
     Color textColor;
@@ -91,9 +132,9 @@ class DeiButton extends StatelessWidget {
                             color: textColor,
                           ),
                         ),
-                        if (routeText.isNotEmpty)
+                        if (summaryText.isNotEmpty)
                           Text(
-                            routeText,
+                            summaryText,
                             style: TextStyle(
                               fontSize: 12,
                               color: textColor.withValues(alpha: 0.8),
@@ -104,12 +145,32 @@ class DeiButton extends StatelessWidget {
                   ),
                   if (dei.identificatienummer != null)
                     Chip(
+                      avatar: isCompleted
+                          ? Icon(
+                              LucideIcons.checkCheck,
+                              size: 14,
+                              color: colorScheme.onPrimaryContainer,
+                            )
+                          : null,
                       label: Text(
-                        'ID: ${dei.identificatienummer}',
-                        style: const TextStyle(
+                        isCompleted
+                            ? 'ID: ${dei.identificatienummer} • BEVESTIGD'
+                            : 'ID: ${dei.identificatienummer}',
+                        style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
+                          color: isCompleted
+                              ? colorScheme.onPrimaryContainer
+                              : colorScheme.onSurfaceVariant,
                         ),
+                      ),
+                      backgroundColor: isCompleted
+                          ? colorScheme.primaryContainer
+                          : colorScheme.surfaceContainerHighest,
+                      side: BorderSide(
+                        color: isCompleted
+                            ? colorScheme.primary
+                            : colorScheme.outline,
                       ),
                       visualDensity: VisualDensity.compact,
                     ),

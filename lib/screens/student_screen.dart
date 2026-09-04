@@ -176,12 +176,18 @@ class _StudentScreenState extends State<StudentScreen> {
             ),
             centerTitle: true,
             actions: <Widget>[
-              IconButton(
-                onPressed: () async {
-                  await showDeiModal(context: context, userRole: 'LEERLING');
-                },
-                icon: const Icon(LucideIcons.fileText),
-                tooltip: 'Nieuw Voorschrift (DEI)',
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: FilledButton.icon(
+                  onPressed: () async {
+                    await showDeiModal(context: context, userRole: 'LEERLING');
+                  },
+                  icon: const Icon(LucideIcons.fileText, size: 18),
+                  label: const Text(
+                    'DEI',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
               ),
               IconButton(
                 onPressed: () async {

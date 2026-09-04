@@ -44,7 +44,7 @@ class _TeacherScreenState extends State<TeacherScreen> {
 
   void _handleDeiNotifications(List<DeiModel> deiList) {
     for (final DeiModel dei in deiList) {
-      if (dei.status == 'isCalling' && !_promptedDeiIds.contains(dei.id)) {
+      if (dei.status == 'sent' && !_promptedDeiIds.contains(dei.id)) {
         _promptedDeiIds.add(dei.id);
         WidgetsBinding.instance.addPostFrameCallback((_) {
           unawaited(_showIncomingDeiDialog(dei));
@@ -88,13 +88,17 @@ class _TeacherScreenState extends State<TeacherScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              Text('Traject: ${dei.emplacementVan} - ${dei.emplacementTot}'),
-              if (dei.kilometerVan.isNotEmpty)
+              if (dei.seinnummer != null && dei.seinnummer!.isNotEmpty)
+                Text('Seinnummer: ${dei.seinnummer}'),
+              if (dei.emplacementVan != null && dei.emplacementVan!.isNotEmpty)
+                Text('Traject: ${dei.emplacementVan} - ${dei.emplacementTot}'),
+              if (dei.kilometerVan != null && dei.kilometerVan!.isNotEmpty)
                 Text('Kilometers: ${dei.kilometerVan} - ${dei.kilometerTot}'),
-              if (dei.bijzonderheden.isNotEmpty) ...<Widget>[
-                const SizedBox(height: 4),
-                Text('Bijzonderheden: ${dei.bijzonderheden}'),
-              ],
+              if (dei.infraControlerenReden != null &&
+                  dei.infraControlerenReden!.isNotEmpty)
+                Text('Reden: ${dei.infraControlerenReden}'),
+              if (dei.overwegen != null && dei.overwegen!.isNotEmpty)
+                Text('Overwegen: ${dei.overwegen!.join(", ")}'),
             ],
           ),
           actions: <Widget>[
@@ -107,11 +111,18 @@ class _TeacherScreenState extends State<TeacherScreen> {
             ElevatedButton(
               onPressed: () async {
                 Navigator.pop(dialogContext);
-                await showDeiModal(
-                  context: context,
-                  userRole: 'OPLEIDER',
-                  existingDei: dei,
+                await DatabaseService().updateDeiStatus(
+                  dei.id,
+                  'OPLEIDER',
+                  'isCalling',
                 );
+                if (mounted) {
+                  await showDeiModal(
+                    context: context,
+                    userRole: 'OPLEIDER',
+                    existingDei: dei.copyWith(status: 'isCalling'),
+                  );
+                }
               },
               child: const Text('Aannemen'),
             ),
@@ -423,11 +434,22 @@ class _TeacherScreenState extends State<TeacherScreen> {
                                   dei: dei,
                                   userRole: 'OPLEIDER',
                                   onTap: () async {
-                                    await showDeiModal(
-                                      context: context,
-                                      userRole: 'OPLEIDER',
-                                      existingDei: dei,
-                                    );
+                                    if (dei.status == 'sent') {
+                                      await DatabaseService().updateDeiStatus(
+                                        dei.id,
+                                        'OPLEIDER',
+                                        'isCalling',
+                                      );
+                                    }
+                                    if (context.mounted) {
+                                      await showDeiModal(
+                                        context: context,
+                                        userRole: 'OPLEIDER',
+                                        existingDei: dei.copyWith(
+                                          status: 'isCalling',
+                                        ),
+                                      );
+                                    }
                                   },
                                 ),
                               );
