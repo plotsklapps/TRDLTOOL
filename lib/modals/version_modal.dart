@@ -46,7 +46,7 @@ class VersionModal extends SignalWidget {
               subtitle: const Text(
                 '- Flutter upgrade naar 3.47.2.\n'
                 '- Dependencies geupgraded.\n'
-                '- DEI formulier toegevoegd (LET OP: Testfase!',
+                '- DEI formulier toegevoegd',
               ),
             ),
             ListTile(
