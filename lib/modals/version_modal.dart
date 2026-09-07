@@ -34,11 +34,27 @@ class VersionModal extends SignalWidget {
           ListTile(
             onTap: _launchGitHub,
             leading: const Icon(LucideIcons.fileCodeCorner),
-            title: const Text('Versie 0.0.2+7 20260904'),
+            title: const Text('Versie 0.0.2+8 20260907'),
             subtitle: const Text(
-              '- Flutter upgrade naar 3.47.2.\n'
-              '- Dependencies geupgraded.\n'
-              '- DEI formulier toegevoegd',
+              '- Flutter upgrade naar 3.47.2 & dependencies geüpgraded;\n'
+              '- Digitaal Europees Voorschrift (DEI 1-8) toegevoegd met '
+              'dynamische formulieren;\n'
+              '- DEI bewerken, kopiëren naar volgende MCN, '
+              'identificatienummers & "Wis alle DEI\'s" actie;\n'
+              '- GRI telefonie herontwerp naar 2026 UI met geanimeerde '
+              'GriButton & GriStatusDisplay;\n'
+              '- Mute-knop audio-volumeregeling gefikst;\n'
+              '- BaseModal architectuur & universele desktop/trackpad '
+              'drag-scrolling.',
+            ),
+          ),
+          ListTile(
+            onTap: _launchGitHub,
+            leading: const Icon(LucideIcons.fileCodeCorner),
+            title: const Text('Versie 0.0.2+7 202600904'),
+            subtitle: const Text(
+              '- Flutter upgrade naar 3.44.9.\n'
+              '- Dependencies geupgraded.',
             ),
           ),
           ListTile(
