@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:toastification/toastification.dart';
 import 'package:trdltool/firebase_options.dart';
+import 'package:trdltool/logic/custom_scroll_behavior.dart';
 import 'package:trdltool/screens/rolechoice_screen.dart';
 import 'package:trdltool/signals/version_signal.dart';
 import 'package:trdltool/theme/flex_theme.dart';
@@ -32,6 +33,7 @@ class MainEntry extends SignalWidget {
   Widget build(BuildContext context) {
     return ToastificationWrapper(
       child: MaterialApp(
+        scrollBehavior: CustomScrollBehavior(),
         debugShowCheckedModeBanner: false,
         title: 'TRDLtool',
         theme: cThemeData.value,

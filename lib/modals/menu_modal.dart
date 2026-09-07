@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:trdltool/logic/modal_logic.dart';
+import 'package:trdltool/modals/base_modal.dart';
 import 'package:trdltool/modals/reload_modal.dart';
 import 'package:trdltool/modals/theme_modal.dart';
 import 'package:trdltool/modals/version_modal.dart';
@@ -12,13 +13,11 @@ class MenuModal extends SignalWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
+    return BaseModal(
+      title: 'Instellingen',
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          const Text('Instellingen'),
-          const Divider(),
           ListTile(
             title: const Text('Thema'),
             subtitle: const Text('Verander het uiterlijk van de app'),

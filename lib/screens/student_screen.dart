@@ -7,19 +7,18 @@ import 'package:just_audio/just_audio.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:trdltool/logic/modal_logic.dart';
+import 'package:trdltool/modals/alarm_modal.dart';
+import 'package:trdltool/modals/base_modal.dart';
 import 'package:trdltool/modals/dei_modal.dart';
+import 'package:trdltool/modals/general_modal.dart';
+import 'package:trdltool/modals/mcn_modal.dart';
 import 'package:trdltool/modals/theme_modal.dart';
 import 'package:trdltool/models/dei_model.dart';
 import 'package:trdltool/services/database_service.dart';
-import 'package:trdltool/widgets/alarm_button.dart';
-import 'package:trdltool/widgets/alarm_call_sheet.dart';
 import 'package:trdltool/widgets/dei_button.dart';
-import 'package:trdltool/widgets/general_button.dart';
-import 'package:trdltool/widgets/general_call_sheet.dart';
-import 'package:trdltool/widgets/mcn_button.dart';
-import 'package:trdltool/widgets/mcn_call_sheet.dart';
+import 'package:trdltool/widgets/gri_button.dart';
+import 'package:trdltool/widgets/gri_status_display.dart';
 import 'package:trdltool/widgets/mute_button.dart';
-import 'package:trdltool/widgets/phone_button.dart';
 
 class StudentScreen extends SignalStatefulWidget {
   const StudentScreen({super.key});
@@ -81,12 +80,16 @@ class _StudentScreenState extends State<StudentScreen> {
       if (newState == 'isCalling' &&
           previousState != 'isCalling' &&
           initiator != userRole) {
+        final double volume = _isMuted ? 0.0 : 1.0;
         // Decide which sound to play based on the button name.
         if (buttonName == 'ALARM') {
+          await _mcnAlarmtoonPlayer.setVolume(volume);
           await _mcnAlarmtoonPlayer.play();
         } else if (buttonName == 'MKS ALARM') {
+          await _boAlarmtoonPlayer.setVolume(volume);
           await _boAlarmtoonPlayer.play();
         } else {
+          await _beltoonPlayer.setVolume(volume);
           await _beltoonPlayer.play();
         }
       }
@@ -115,6 +118,119 @@ class _StudentScreenState extends State<StudentScreen> {
       unawaited(_boAlarmtoonPlayer.setVolume(volume));
       unawaited(_beltoonPlayer.setVolume(volume));
     });
+  }
+
+  Future<void> _showClearAllDeisModal(BuildContext context) async {
+    await showModalBottomSheet<void>(
+      showDragHandle: true,
+      isScrollControlled: true,
+      context: context,
+      builder: (BuildContext modalContext) {
+        final ColorScheme colorScheme = Theme.of(modalContext).colorScheme;
+
+        return BaseModal(
+          title: "Alle DEI's Wissen",
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              const Text(
+                "Weet je zeker dat je alle uitgegeven voorschriften (DEI's) "
+                'wilt wissen uit de sessie?',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 15),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: SizedBox(
+                      height: 80,
+                      child: Material(
+                        color: colorScheme.surfaceContainerHigh,
+                        borderRadius: BorderRadius.circular(16),
+                        elevation: 1,
+                        child: InkWell(
+                          onTap: () => Navigator.pop(modalContext),
+                          borderRadius: BorderRadius.circular(16),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: colorScheme.outline,
+                                width: 1.5,
+                              ),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Center(
+                              child: Text(
+                                'Annuleren',
+                                style: TextStyle(
+                                  color: colorScheme.primary,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: SizedBox(
+                      height: 80,
+                      child: Material(
+                        color: colorScheme.errorContainer,
+                        borderRadius: BorderRadius.circular(16),
+                        elevation: 2,
+                        child: InkWell(
+                          onTap: () async {
+                            Navigator.pop(modalContext);
+                            await DatabaseService().clearAllDeis('LEERLING');
+                          },
+                          borderRadius: BorderRadius.circular(16),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: colorScheme.error,
+                                width: 1.5,
+                              ),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: <Widget>[
+                                Icon(
+                                  LucideIcons.trash2,
+                                  color: colorScheme.onErrorContainer,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                Flexible(
+                                  child: Text(
+                                    "Wis alle DEI's",
+                                    style: TextStyle(
+                                      color: colorScheme.onErrorContainer,
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -177,15 +293,51 @@ class _StudentScreenState extends State<StudentScreen> {
             centerTitle: true,
             actions: <Widget>[
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: FilledButton.icon(
-                  onPressed: () async {
-                    await showDeiModal(context: context, userRole: 'LEERLING');
-                  },
-                  icon: const Icon(LucideIcons.fileText, size: 18),
-                  label: const Text(
-                    'DEI',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                child: SizedBox(
+                  width: 80,
+                  height: 40,
+                  child: Material(
+                    color: Theme.of(context).colorScheme.primary,
+                    borderRadius: BorderRadius.circular(10),
+                    elevation: 2,
+                    child: InkWell(
+                      onTap: () async {
+                        await showDeiModal(
+                          context: context,
+                          userRole: 'LEERLING',
+                        );
+                      },
+                      borderRadius: BorderRadius.circular(10),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.outlineVariant,
+                            width: 1.5,
+                          ),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            Icon(
+                              LucideIcons.fileText,
+                              color: Theme.of(context).colorScheme.onPrimary,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'DEI',
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onPrimary,
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -201,29 +353,7 @@ class _StudentScreenState extends State<StudentScreen> {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: <Widget>[
-                SizedBox(
-                  width: double.infinity,
-                  child: Container(
-                    height: 80,
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).disabledColor,
-                      border: Border.all(
-                        color: Theme.of(context).colorScheme.primary,
-                        width: 2,
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Center(
-                      child: Text(
-                        statusText.toUpperCase(),
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.onPrimary,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+                GriStatusDisplay(statusText: statusText),
                 StreamBuilder<DatabaseEvent>(
                   stream: database
                       .child('$formattedDate/${sCodeLeerling.value}/deis')
@@ -265,15 +395,42 @@ class _StudentScreenState extends State<StudentScreen> {
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
-                            const SizedBox(height: 12),
-                            const Text(
-                              'UITGEGEVEN VOORSCHRIFTEN (DEI)',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12,
-                              ),
-                            ),
                             const SizedBox(height: 8),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: <Widget>[
+                                const Text(
+                                  'UITGEGEVEN VOORSCHRIFTEN (DEI)',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                TextButton.icon(
+                                  onPressed: () async {
+                                    await _showClearAllDeisModal(context);
+                                  },
+                                  icon: const Icon(
+                                    LucideIcons.trash2,
+                                    size: 14,
+                                  ),
+                                  label: const Text(
+                                    'Alles wissen',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: Theme.of(
+                                      context,
+                                    ).colorScheme.error,
+                                    visualDensity: VisualDensity.compact,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
                             ...deiList.map((DeiModel dei) {
                               return Padding(
                                 padding: const EdgeInsets.only(bottom: 8),
@@ -300,7 +457,7 @@ class _StudentScreenState extends State<StudentScreen> {
                     Expanded(
                       child: Column(
                         children: <Widget>[
-                          PhoneButton(
+                          GriButton(
                             buttonName: 'MKS ALARM',
                             userRole: 'LEERLING',
                             buttonStates: buttonStates,
@@ -309,12 +466,9 @@ class _StudentScreenState extends State<StudentScreen> {
                             databaseService: databaseService,
                             buttonColor: Theme.of(context).colorScheme.primary,
                             labelColor: Theme.of(context).colorScheme.onPrimary,
-                            progressIndicatorColor: Theme.of(
-                              context,
-                            ).colorScheme.onPrimary,
                           ),
                           const SizedBox(height: 8),
-                          PhoneButton(
+                          GriButton(
                             buttonName: 'MKS INFO',
                             userRole: 'LEERLING',
                             buttonStates: buttonStates,
@@ -325,20 +479,14 @@ class _StudentScreenState extends State<StudentScreen> {
                               context,
                             ).colorScheme.primaryContainer,
                             labelColor: Theme.of(context).colorScheme.primary,
-                            progressIndicatorColor: Theme.of(
-                              context,
-                            ).colorScheme.onPrimary,
                           ),
                           const SizedBox(height: 8),
-                          PhoneButton(
+                          GriButton(
                             buttonName: 'AL',
                             buttonColor: Theme.of(
                               context,
                             ).colorScheme.onPrimary,
                             labelColor: Theme.of(context).colorScheme.primary,
-                            progressIndicatorColor: Theme.of(
-                              context,
-                            ).colorScheme.primary,
                             userRole: 'LEERLING',
                             buttonStates: buttonStates,
                             buttonInitiators: buttonInitiators,
@@ -346,15 +494,12 @@ class _StudentScreenState extends State<StudentScreen> {
                             databaseService: databaseService,
                           ),
                           const SizedBox(height: 8),
-                          PhoneButton(
+                          GriButton(
                             buttonName: 'OBI',
                             buttonColor: Theme.of(
                               context,
                             ).colorScheme.onPrimary,
                             labelColor: Theme.of(context).colorScheme.primary,
-                            progressIndicatorColor: Theme.of(
-                              context,
-                            ).colorScheme.primary,
                             userRole: 'LEERLING',
                             buttonStates: buttonStates,
                             buttonInitiators: buttonInitiators,
@@ -362,15 +507,12 @@ class _StudentScreenState extends State<StudentScreen> {
                             databaseService: databaseService,
                           ),
                           const SizedBox(height: 8),
-                          PhoneButton(
+                          GriButton(
                             buttonName: 'DVL',
                             buttonColor: Theme.of(
                               context,
                             ).colorScheme.onPrimary,
                             labelColor: Theme.of(context).colorScheme.primary,
-                            progressIndicatorColor: Theme.of(
-                              context,
-                            ).colorScheme.primary,
                             userRole: 'LEERLING',
                             buttonStates: buttonStates,
                             buttonInitiators: buttonInitiators,
@@ -386,15 +528,12 @@ class _StudentScreenState extends State<StudentScreen> {
                     Expanded(
                       child: Column(
                         children: <Widget>[
-                          PhoneButton(
+                          GriButton(
                             buttonName: 'Tunnel Operator',
                             buttonColor: Theme.of(
                               context,
                             ).colorScheme.onPrimary,
                             labelColor: Theme.of(context).colorScheme.primary,
-                            progressIndicatorColor: Theme.of(
-                              context,
-                            ).colorScheme.primary,
                             userRole: 'LEERLING',
                             buttonStates: buttonStates,
                             buttonInitiators: buttonInitiators,
@@ -402,15 +541,12 @@ class _StudentScreenState extends State<StudentScreen> {
                             databaseService: databaseService,
                           ),
                           const SizedBox(height: 8),
-                          PhoneButton(
+                          GriButton(
                             buttonName: 'BuurTRDL',
                             buttonColor: Theme.of(
                               context,
                             ).colorScheme.onPrimary,
                             labelColor: Theme.of(context).colorScheme.primary,
-                            progressIndicatorColor: Theme.of(
-                              context,
-                            ).colorScheme.primary,
                             userRole: 'LEERLING',
                             buttonStates: buttonStates,
                             buttonInitiators: buttonInitiators,
@@ -418,15 +554,12 @@ class _StudentScreenState extends State<StudentScreen> {
                             databaseService: databaseService,
                           ),
                           const SizedBox(height: 8),
-                          PhoneButton(
+                          GriButton(
                             buttonName: 'Mdw Rangeren',
                             buttonColor: Theme.of(
                               context,
                             ).colorScheme.onPrimary,
                             labelColor: Theme.of(context).colorScheme.primary,
-                            progressIndicatorColor: Theme.of(
-                              context,
-                            ).colorScheme.primary,
                             userRole: 'LEERLING',
                             buttonStates: buttonStates,
                             buttonInitiators: buttonInitiators,
@@ -434,15 +567,12 @@ class _StudentScreenState extends State<StudentScreen> {
                             databaseService: databaseService,
                           ),
                           const SizedBox(height: 8),
-                          PhoneButton(
+                          GriButton(
                             buttonName: 'Brugwachter',
                             buttonColor: Theme.of(
                               context,
                             ).colorScheme.onPrimary,
                             labelColor: Theme.of(context).colorScheme.primary,
-                            progressIndicatorColor: Theme.of(
-                              context,
-                            ).colorScheme.primary,
                             userRole: 'LEERLING',
                             buttonStates: buttonStates,
                             buttonInitiators: buttonInitiators,
@@ -450,14 +580,19 @@ class _StudentScreenState extends State<StudentScreen> {
                             databaseService: databaseService,
                           ),
                           const SizedBox(height: 8),
-                          McnButton(
+                          GriButton(
+                            buttonName: 'MCN',
+                            buttonColor: Theme.of(
+                              context,
+                            ).colorScheme.primaryContainer,
+                            labelColor: Theme.of(context).colorScheme.primary,
                             userRole: 'LEERLING',
                             buttonStates: buttonStates,
                             buttonInitiators: buttonInitiators,
                             buttonDetails: buttonDetails,
                             databaseService: databaseService,
-                            onShowMcnCallSheet: () async {
-                              await showMcnCallSheet(
+                            onPressed: () async {
+                              await showMcnModal(
                                 context: context,
                                 userRole: 'LEERLING',
                                 databasePath: path,
@@ -468,15 +603,12 @@ class _StudentScreenState extends State<StudentScreen> {
                             },
                           ),
                           const SizedBox(height: 8),
-                          PhoneButton(
+                          GriButton(
                             buttonName: 'Overig',
                             buttonColor: Theme.of(
                               context,
                             ).colorScheme.onPrimary,
                             labelColor: Theme.of(context).colorScheme.primary,
-                            progressIndicatorColor: Theme.of(
-                              context,
-                            ).colorScheme.primary,
                             userRole: 'LEERLING',
                             buttonStates: buttonStates,
                             buttonInitiators: buttonInitiators,
@@ -492,14 +624,17 @@ class _StudentScreenState extends State<StudentScreen> {
                 Row(
                   children: <Widget>[
                     Expanded(
-                      child: AlarmButton(
+                      child: GriButton(
+                        buttonName: 'ALARM',
                         userRole: 'LEERLING',
                         buttonStates: buttonStates,
                         buttonInitiators: buttonInitiators,
                         buttonDetails: buttonDetails,
                         databaseService: databaseService,
+                        buttonColor: Theme.of(context).colorScheme.primary,
+                        labelColor: Theme.of(context).colorScheme.onPrimary,
                         onPressed: () async {
-                          await showAlarmCallSheet(
+                          await showAlarmModal(
                             context: context,
                             userRole: 'LEERLING',
                             databasePath: path,
@@ -512,14 +647,19 @@ class _StudentScreenState extends State<StudentScreen> {
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: GeneralButton(
+                      child: GriButton(
+                        buttonName: 'ALGEMEEN',
                         userRole: 'LEERLING',
                         buttonStates: buttonStates,
                         buttonInitiators: buttonInitiators,
                         buttonDetails: buttonDetails,
                         databaseService: databaseService,
+                        buttonColor: Theme.of(
+                          context,
+                        ).colorScheme.primaryContainer,
+                        labelColor: Theme.of(context).colorScheme.primary,
                         onPressed: () async {
-                          await showGeneralCallSheet(
+                          await showGeneralModal(
                             context: context,
                             userRole: 'LEERLING',
                             databasePath: path,

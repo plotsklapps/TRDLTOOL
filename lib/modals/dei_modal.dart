@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:trdltool/modals/base_modal.dart';
 import 'package:trdltool/models/dei_model.dart';
 import 'package:trdltool/services/database_service.dart';
 
@@ -285,6 +286,56 @@ class _DeiModalState extends State<DeiModal> {
     );
   }
 
+  Widget _buildModalActionButton({
+    required String label,
+    required IconData icon,
+    required Color backgroundColor,
+    required Color foregroundColor,
+    required VoidCallback onPressed,
+    Color? borderColor,
+  }) {
+    return SizedBox(
+      width: double.infinity,
+      height: 80,
+      child: Material(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(16),
+        elevation: 2,
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: borderColor ?? foregroundColor.withValues(alpha: 0.3),
+                width: 1.5,
+              ),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Icon(icon, color: foregroundColor, size: 22),
+                const SizedBox(width: 10),
+                Flexible(
+                  child: Text(
+                    label,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: foregroundColor,
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final ColorScheme colorScheme = Theme.of(context).colorScheme;
@@ -306,232 +357,187 @@ class _DeiModalState extends State<DeiModal> {
 
     final String subtitleText = _deiSubtitles[_selectedDeiType] ?? '';
 
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-        left: 16,
-        right: 16,
-        top: 8,
-      ),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-            // Header Title & Status
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-                Expanded(
-                  child: Text(
-                    headerTitle,
-                    style: const TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                if (widget.existingDei != null && !_isDuplicating)
-                  Chip(
+    return BaseModal(
+      title: headerTitle,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          // DEI ChoiceChips (1 t/m 8)
+          const Text(
+            'Selecteer DEI Type:',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: List<Widget>.generate(8, (int index) {
+                final String number = '${index + 1}';
+                final bool isSelected = _selectedDeiType == number;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: ChoiceChip(
                     label: Text(
-                      widget.existingDei!.status.toUpperCase(),
-                      style: const TextStyle(fontSize: 11),
+                      'DEI $number',
+                      style: TextStyle(
+                        fontWeight: isSelected
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                        color: isSelected ? colorScheme.onPrimary : null,
+                      ),
                     ),
-                    backgroundColor: colorScheme.primaryContainer,
+                    selected: isSelected,
+                    selectedColor: colorScheme.primary,
+                    disabledColor: isSelected
+                        ? colorScheme.primary
+                        : colorScheme.surfaceContainerLow,
+                    onSelected: isReadOnly
+                        ? null
+                        : (bool selected) {
+                            if (selected) {
+                              setState(() {
+                                _selectedDeiType = number;
+                              });
+                            }
+                          },
                   ),
-              ],
+                );
+              }),
             ),
+          ),
+          const SizedBox(height: 12),
+
+          // Official DEI Subtitle Display Banner
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: colorScheme.primaryContainer.withValues(alpha: 0.6),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              subtitleText,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+                color: colorScheme.onPrimaryContainer,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Common Field: Treinnummer
+          _buildCustomTextField(
+            controller: _treinnummerController,
+            labelText: 'Treinnummer (MCN)',
+            hintText: 'bijv. 47705',
+            icon: LucideIcons.trainTrack,
+            isReadOnly: isReadOnly,
+            colorScheme: colorScheme,
+            keyboardType: TextInputType.number,
+            maxLength: 6,
+            inputFormatters: <TextInputFormatter>[
+              FilteringTextInputFormatter.digitsOnly,
+            ],
+            onChanged: (String val) {
+              if (_isCreationMode) {
+                _idNummerController.text = _generateDefaultIdNumber(val);
+              }
+            },
+          ),
+          const SizedBox(height: 12),
+
+          // Dynamic Form Fields based on DEI Type
+          ..._buildDynamicFormFields(colorScheme, isReadOnly),
+
+          const SizedBox(height: 16),
+
+          // Identificatienummer section for TRDL when DEI is active
+          if (_isTRDL && !_isCreationMode && !_isEditingCurrent) ...<Widget>[
             const Divider(),
             const SizedBox(height: 8),
-
-            // DEI ChoiceChips (1 t/m 8)
-            const Text(
-              'Selecteer DEI Type:',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: List<Widget>.generate(8, (int index) {
-                  final String number = '${index + 1}';
-                  final bool isSelected = _selectedDeiType == number;
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 6),
-                    child: ChoiceChip(
-                      label: Text(
-                        'DEI $number',
-                        style: TextStyle(
-                          fontWeight: isSelected
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                          color: isSelected ? colorScheme.onPrimary : null,
-                        ),
-                      ),
-                      selected: isSelected,
-                      selectedColor: colorScheme.primary,
-                      disabledColor: isSelected
-                          ? colorScheme.primary
-                          : colorScheme.surfaceContainerLow,
-                      onSelected: isReadOnly
-                          ? null
-                          : (bool selected) {
-                              if (selected) {
-                                setState(() {
-                                  _selectedDeiType = number;
-                                });
-                              }
-                            },
-                    ),
-                  );
-                }),
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // Official DEI Subtitle Display Banner
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: colorScheme.primaryContainer.withValues(alpha: 0.6),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                subtitleText,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
-                  color: colorScheme.onPrimaryContainer,
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Common Field: Treinnummer
             _buildCustomTextField(
-              controller: _treinnummerController,
-              labelText: 'Treinnummer (MCN)',
-              hintText: 'bijv. 47705',
-              icon: LucideIcons.trainTrack,
-              isReadOnly: isReadOnly,
+              controller: _idNummerController,
+              labelText: 'Identificatienummer (Trein + Tijd)',
+              hintText: 'bijv. 477051250',
+              icon: LucideIcons.keyRound,
+              isReadOnly: false,
               colorScheme: colorScheme,
               keyboardType: TextInputType.number,
-              maxLength: 6,
-              inputFormatters: <TextInputFormatter>[
-                FilteringTextInputFormatter.digitsOnly,
-              ],
-              onChanged: (String val) {
-                if (_isCreationMode) {
-                  _idNummerController.text = _generateDefaultIdNumber(val);
-                }
-              },
             ),
             const SizedBox(height: 12),
+          ],
 
-            // Dynamic Form Fields based on DEI Type
-            ..._buildDynamicFormFields(colorScheme, isReadOnly),
-
-            const SizedBox(height: 16),
-
-            // Identificatienummer section for TRDL when DEI is active
-            if (_isTRDL && !_isCreationMode && !_isEditingCurrent) ...<Widget>[
-              const Divider(),
+          // Action Buttons
+          if (_isCreationMode && _isTRDL) ...<Widget>[
+            _buildModalActionButton(
+              label: 'Verstuur DEI naar MCN',
+              icon: LucideIcons.send,
+              backgroundColor: colorScheme.primary,
+              foregroundColor: colorScheme.onPrimary,
+              onPressed: _submitDei,
+            ),
+          ] else if (_isEditingCurrent && _isTRDL) ...<Widget>[
+            _buildModalActionButton(
+              label: 'Sla wijzigingen op',
+              icon: LucideIcons.save,
+              backgroundColor: colorScheme.primary,
+              foregroundColor: colorScheme.onPrimary,
+              onPressed: _saveEditedDei,
+            ),
+          ] else ...<Widget>[
+            if (_isTRDL) ...<Widget>[
+              _buildModalActionButton(
+                label: 'Verstuur Identificatienummer',
+                icon: LucideIcons.checkCheck,
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
+                onPressed: _sendIdentificatienummer,
+              ),
               const SizedBox(height: 8),
-              _buildCustomTextField(
-                controller: _idNummerController,
-                labelText: 'Identificatienummer (Trein + Tijd)',
-                hintText: 'bijv. 477051250',
-                icon: LucideIcons.keyRound,
-                isReadOnly: false,
-                colorScheme: colorScheme,
-                keyboardType: TextInputType.number,
+              _buildModalActionButton(
+                label: 'Afgeven aan volgende MCN',
+                icon: LucideIcons.copyPlus,
+                backgroundColor: colorScheme.secondaryContainer,
+                foregroundColor: colorScheme.onSecondaryContainer,
+                onPressed: _startDuplicatingForNextMcn,
               ),
-              const SizedBox(height: 12),
-            ],
-
-            // Action Buttons
-            if (_isCreationMode && _isTRDL) ...<Widget>[
-              ElevatedButton.icon(
-                onPressed: _submitDei,
-                icon: const Icon(LucideIcons.send),
-                label: const Text('Verstuur DEI naar MCN'),
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(50),
-                ),
-              ),
-            ] else if (_isEditingCurrent && _isTRDL) ...<Widget>[
-              ElevatedButton.icon(
-                onPressed: _saveEditedDei,
-                icon: const Icon(LucideIcons.save),
-                label: const Text('Sla wijzigingen op'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: colorScheme.primary,
-                  foregroundColor: colorScheme.onPrimary,
-                  minimumSize: const Size.fromHeight(50),
-                ),
+              const SizedBox(height: 8),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: _buildModalActionButton(
+                      label: 'DEI Bewerken',
+                      icon: LucideIcons.pencil,
+                      backgroundColor: colorScheme.surfaceContainerHigh,
+                      foregroundColor: colorScheme.primary,
+                      onPressed: _startEditingCurrentDei,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _buildModalActionButton(
+                      label: 'DEI Annuleren',
+                      icon: LucideIcons.trash2,
+                      backgroundColor: colorScheme.errorContainer,
+                      foregroundColor: colorScheme.onErrorContainer,
+                      onPressed: _cancelDei,
+                    ),
+                  ),
+                ],
               ),
             ] else ...<Widget>[
-              if (_isTRDL) ...<Widget>[
-                ElevatedButton.icon(
-                  onPressed: _sendIdentificatienummer,
-                  icon: const Icon(LucideIcons.checkCheck),
-                  label: const Text('Verstuur Identificatienummer'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: colorScheme.primary,
-                    foregroundColor: colorScheme.onPrimary,
-                    minimumSize: const Size.fromHeight(50),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                ElevatedButton.icon(
-                  onPressed: _startDuplicatingForNextMcn,
-                  icon: const Icon(LucideIcons.copyPlus),
-                  label: const Text('Afgeven aan volgende MCN'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: colorScheme.secondaryContainer,
-                    foregroundColor: colorScheme.onSecondaryContainer,
-                    minimumSize: const Size.fromHeight(50),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: <Widget>[
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: _startEditingCurrentDei,
-                        icon: const Icon(LucideIcons.pencil),
-                        label: const Text('DEI Bewerken'),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: _cancelDei,
-                        icon: const Icon(LucideIcons.trash2),
-                        label: const Text('DEI Annuleren'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: colorScheme.error,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ] else ...<Widget>[
-                ElevatedButton.icon(
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(LucideIcons.check),
-                  label: const Text('Teruggelezen / Sluiten'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: colorScheme.primary,
-                    foregroundColor: colorScheme.onPrimary,
-                    minimumSize: const Size.fromHeight(50),
-                  ),
-                ),
-              ],
+              _buildModalActionButton(
+                label: 'Teruggelezen / Sluiten',
+                icon: LucideIcons.check,
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
+                onPressed: () => Navigator.pop(context),
+              ),
             ],
-            const SizedBox(height: 12),
           ],
-        ),
+          const SizedBox(height: 12),
+        ],
       ),
     );
   }

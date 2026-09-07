@@ -7,19 +7,18 @@ import 'package:just_audio/just_audio.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:trdltool/logic/modal_logic.dart';
+import 'package:trdltool/modals/alarm_modal.dart';
+import 'package:trdltool/modals/base_modal.dart';
 import 'package:trdltool/modals/dei_modal.dart';
+import 'package:trdltool/modals/general_modal.dart';
+import 'package:trdltool/modals/mcn_modal.dart';
 import 'package:trdltool/modals/theme_modal.dart';
 import 'package:trdltool/models/dei_model.dart';
 import 'package:trdltool/services/database_service.dart';
-import 'package:trdltool/widgets/alarm_button.dart';
-import 'package:trdltool/widgets/alarm_call_sheet.dart';
 import 'package:trdltool/widgets/dei_button.dart';
-import 'package:trdltool/widgets/general_button.dart';
-import 'package:trdltool/widgets/general_call_sheet.dart';
-import 'package:trdltool/widgets/mcn_button.dart';
-import 'package:trdltool/widgets/mcn_call_sheet.dart';
+import 'package:trdltool/widgets/gri_button.dart';
+import 'package:trdltool/widgets/gri_status_display.dart';
 import 'package:trdltool/widgets/mute_button.dart';
-import 'package:trdltool/widgets/phone_button.dart';
 
 class TeacherScreen extends SignalStatefulWidget {
   const TeacherScreen({super.key});
@@ -47,38 +46,56 @@ class _TeacherScreenState extends State<TeacherScreen> {
       if (dei.status == 'sent' && !_promptedDeiIds.contains(dei.id)) {
         _promptedDeiIds.add(dei.id);
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          unawaited(_showIncomingDeiDialog(dei));
+          unawaited(_showIncomingDeiModal(dei));
         });
       } else if (dei.status == 'id_sent' &&
           !_promptedIdNumDeiIds.contains(dei.id)) {
         _promptedIdNumDeiIds.add(dei.id);
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          unawaited(_showIdentificatienummerDialog(dei));
+          unawaited(_showIdentificatienummerModal(dei));
         });
       }
     }
   }
 
-  Future<void> _showIncomingDeiDialog(DeiModel dei) async {
+  Future<void> _showIncomingDeiModal(DeiModel dei) async {
     if (!mounted) return;
-    await showDialog<void>(
+    await showModalBottomSheet<void>(
+      showDragHandle: true,
+      isScrollControlled: true,
       context: context,
-      barrierDismissible: false,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          title: Row(
-            children: <Widget>[
-              Icon(
-                LucideIcons.fileText,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              const SizedBox(width: 8),
-              Text('Nieuwe DEI ${dei.deiType}'),
-            ],
-          ),
-          content: Column(
+      builder: (BuildContext modalContext) {
+        final ColorScheme colorScheme = Theme.of(modalContext).colorScheme;
+
+        String routeSummary = '';
+        if (dei.emplacementVan != null && dei.emplacementVan!.isNotEmpty) {
+          if (dei.emplacementTot != null && dei.emplacementTot!.isNotEmpty) {
+            routeSummary =
+                'Traject: ${dei.emplacementVan} - ${dei.emplacementTot}';
+          } else {
+            routeSummary = 'Emplacement: ${dei.emplacementVan}';
+          }
+        } else if (dei.emplacementTot != null &&
+            dei.emplacementTot!.isNotEmpty) {
+          routeSummary = 'Emplacement: ${dei.emplacementTot}';
+        }
+
+        String kmSummary = '';
+        if (dei.kilometerVan != null && dei.kilometerVan!.isNotEmpty) {
+          if (dei.kilometerTot != null && dei.kilometerTot!.isNotEmpty) {
+            kmSummary = 'Kilometers: ${dei.kilometerVan} - ${dei.kilometerTot}';
+          } else {
+            kmSummary = 'Kilometer: ${dei.kilometerVan}';
+          }
+        } else if (dei.kilometerTot != null && dei.kilometerTot!.isNotEmpty) {
+          kmSummary = 'Kilometer: ${dei.kilometerTot}';
+        }
+
+        return BaseModal(
+          title: 'Nieuwe DEI ${dei.deiType}',
+          child: Column(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
               Text(
                 'Bestemd voor Trein ${dei.treinnummer}',
@@ -90,111 +107,212 @@ class _TeacherScreenState extends State<TeacherScreen> {
               const SizedBox(height: 8),
               if (dei.seinnummer != null && dei.seinnummer!.isNotEmpty)
                 Text('Seinnummer: ${dei.seinnummer}'),
-              if (dei.emplacementVan != null && dei.emplacementVan!.isNotEmpty)
-                Text('Traject: ${dei.emplacementVan} - ${dei.emplacementTot}'),
-              if (dei.kilometerVan != null && dei.kilometerVan!.isNotEmpty)
-                Text('Kilometers: ${dei.kilometerVan} - ${dei.kilometerTot}'),
+              if (routeSummary.isNotEmpty) Text(routeSummary),
+              if (kmSummary.isNotEmpty) Text(kmSummary),
               if (dei.infraControlerenReden != null &&
                   dei.infraControlerenReden!.isNotEmpty)
                 Text('Reden: ${dei.infraControlerenReden}'),
               if (dei.overwegen != null && dei.overwegen!.isNotEmpty)
                 Text('Overwegen: ${dei.overwegen!.join(", ")}'),
+              const SizedBox(height: 24),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: SizedBox(
+                      height: 80,
+                      child: Material(
+                        color: colorScheme.surfaceContainerHigh,
+                        borderRadius: BorderRadius.circular(16),
+                        elevation: 1,
+                        child: InkWell(
+                          onTap: () {
+                            Navigator.pop(modalContext);
+                          },
+                          borderRadius: BorderRadius.circular(16),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: colorScheme.outline,
+                                width: 1.5,
+                              ),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: <Widget>[
+                                Icon(
+                                  LucideIcons.pause,
+                                  color: colorScheme.primary,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                Flexible(
+                                  child: Text(
+                                    'Pauzeren / Later',
+                                    style: TextStyle(
+                                      color: colorScheme.primary,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: SizedBox(
+                      height: 80,
+                      child: Material(
+                        color: colorScheme.primary,
+                        borderRadius: BorderRadius.circular(16),
+                        elevation: 2,
+                        child: InkWell(
+                          onTap: () async {
+                            Navigator.pop(modalContext);
+                            await DatabaseService().updateDeiStatus(
+                              dei.id,
+                              'OPLEIDER',
+                              'isCalling',
+                            );
+                            if (modalContext.mounted) {
+                              await showDeiModal(
+                                context: modalContext,
+                                userRole: 'OPLEIDER',
+                                existingDei: dei.copyWith(status: 'isCalling'),
+                              );
+                            }
+                          },
+                          borderRadius: BorderRadius.circular(16),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: <Widget>[
+                              Icon(
+                                LucideIcons.phoneIncoming,
+                                color: colorScheme.onPrimary,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              Flexible(
+                                child: Text(
+                                  'Aannemen',
+                                  style: TextStyle(
+                                    color: colorScheme.onPrimary,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
-          actions: <Widget>[
-            OutlinedButton(
-              onPressed: () {
-                Navigator.pop(dialogContext);
-              },
-              child: const Text('Pauzeren / Later'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                Navigator.pop(dialogContext);
-                await DatabaseService().updateDeiStatus(
-                  dei.id,
-                  'OPLEIDER',
-                  'isCalling',
-                );
-                if (mounted) {
-                  await showDeiModal(
-                    context: context,
-                    userRole: 'OPLEIDER',
-                    existingDei: dei.copyWith(status: 'isCalling'),
-                  );
-                }
-              },
-              child: const Text('Aannemen'),
-            ),
-          ],
         );
       },
     );
   }
 
-  Future<void> _showIdentificatienummerDialog(DeiModel dei) async {
+  Future<void> _showIdentificatienummerModal(DeiModel dei) async {
     if (!mounted) return;
-    await showDialog<void>(
+    await showModalBottomSheet<void>(
+      showDragHandle: true,
+      isScrollControlled: true,
       context: context,
-      barrierDismissible: false,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          title: const Row(
-            children: <Widget>[
-              Icon(LucideIcons.keyRound, color: Colors.green),
-              SizedBox(width: 8),
-              Text('Identificatienummer'),
-            ],
-          ),
-          content: Column(
+      builder: (BuildContext modalContext) {
+        final ColorScheme colorScheme = Theme.of(modalContext).colorScheme;
+
+        return BaseModal(
+          title: 'Identificatienummer DEI ${dei.deiType}',
+          child: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
               Text(
                 'Identificatienummer voor DEI ${dei.deiType} '
                 '(Trein ${dei.treinnummer}):',
-                style: const TextStyle(fontSize: 14),
+                style: const TextStyle(fontSize: 15),
               ),
               const SizedBox(height: 16),
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24,
-                  vertical: 12,
+                  vertical: 16,
                 ),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(8),
+                  color: colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: colorScheme.primary, width: 2),
                 ),
-                child: Text(
-                  dei.identificatienummer ?? '',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 2,
-                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                child: Center(
+                  child: Text(
+                    dei.identificatienummer ?? '',
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 2,
+                      color: colorScheme.onPrimaryContainer,
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               const Text(
                 'Lees dit identificatienummer terug aan de TRDL.',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontStyle: FontStyle.italic),
               ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                height: 80,
+                child: Material(
+                  color: colorScheme.primary,
+                  borderRadius: BorderRadius.circular(16),
+                  elevation: 2,
+                  child: InkWell(
+                    onTap: () async {
+                      Navigator.pop(modalContext);
+                      await DatabaseService().updateDeiStatus(
+                        dei.id,
+                        'OPLEIDER',
+                        'completed',
+                      );
+                    },
+                    borderRadius: BorderRadius.circular(16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        Icon(
+                          LucideIcons.check,
+                          color: colorScheme.onPrimary,
+                          size: 22,
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          'BEGREPEN & AFGEROND',
+                          style: TextStyle(
+                            color: colorScheme.onPrimary,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
-          actions: <Widget>[
-            ElevatedButton(
-              onPressed: () async {
-                Navigator.pop(dialogContext);
-                await DatabaseService().updateDeiStatus(
-                  dei.id,
-                  'OPLEIDER',
-                  'completed',
-                );
-              },
-              child: const Text('Begrepen & Afgerond'),
-            ),
-          ],
         );
       },
     );
@@ -244,12 +362,16 @@ class _TeacherScreenState extends State<TeacherScreen> {
       if (newState == 'isCalling' &&
           previousState != 'isCalling' &&
           initiator != userRole) {
+        final double volume = _isMuted ? 0.0 : 1.0;
         // Decide which sound to play based on the button name.
         if (buttonName == 'ALARM') {
+          await _mcnAlarmtoonPlayer.setVolume(volume);
           await _mcnAlarmtoonPlayer.play();
         } else if (buttonName == 'MKS ALARM') {
+          await _boAlarmtoonPlayer.setVolume(volume);
           await _boAlarmtoonPlayer.play();
         } else {
+          await _beltoonPlayer.setVolume(volume);
           await _beltoonPlayer.play();
         }
       }
@@ -351,29 +473,7 @@ class _TeacherScreenState extends State<TeacherScreen> {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: <Widget>[
-                SizedBox(
-                  width: double.infinity,
-                  child: Container(
-                    height: 80,
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).disabledColor,
-                      border: Border.all(
-                        color: Theme.of(context).colorScheme.primary,
-                        width: 2,
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Center(
-                      child: Text(
-                        statusText.toUpperCase(),
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.onPrimary,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+                GriStatusDisplay(statusText: statusText),
                 StreamBuilder<DatabaseEvent>(
                   stream: database
                       .child('$formattedDate/${sCodeOpleider.value}/deis')
@@ -464,7 +564,7 @@ class _TeacherScreenState extends State<TeacherScreen> {
                     Expanded(
                       child: Column(
                         children: <Widget>[
-                          PhoneButton(
+                          GriButton(
                             buttonName: 'MKS ALARM',
                             userRole: 'OPLEIDER',
                             buttonStates: buttonStates,
@@ -473,12 +573,9 @@ class _TeacherScreenState extends State<TeacherScreen> {
                             databaseService: databaseService,
                             buttonColor: Theme.of(context).colorScheme.primary,
                             labelColor: Theme.of(context).colorScheme.onPrimary,
-                            progressIndicatorColor: Theme.of(
-                              context,
-                            ).colorScheme.onPrimary,
                           ),
                           const SizedBox(height: 8),
-                          PhoneButton(
+                          GriButton(
                             buttonName: 'MKS INFO',
                             userRole: 'OPLEIDER',
                             buttonStates: buttonStates,
@@ -489,20 +586,14 @@ class _TeacherScreenState extends State<TeacherScreen> {
                               context,
                             ).colorScheme.primaryContainer,
                             labelColor: Theme.of(context).colorScheme.primary,
-                            progressIndicatorColor: Theme.of(
-                              context,
-                            ).colorScheme.onPrimary,
                           ),
                           const SizedBox(height: 8),
-                          PhoneButton(
+                          GriButton(
                             buttonName: 'AL',
                             buttonColor: Theme.of(
                               context,
                             ).colorScheme.onPrimary,
                             labelColor: Theme.of(context).colorScheme.primary,
-                            progressIndicatorColor: Theme.of(
-                              context,
-                            ).colorScheme.primary,
                             userRole: 'OPLEIDER',
                             buttonStates: buttonStates,
                             buttonInitiators: buttonInitiators,
@@ -510,15 +601,12 @@ class _TeacherScreenState extends State<TeacherScreen> {
                             databaseService: databaseService,
                           ),
                           const SizedBox(height: 8),
-                          PhoneButton(
+                          GriButton(
                             buttonName: 'OBI',
                             buttonColor: Theme.of(
                               context,
                             ).colorScheme.onPrimary,
                             labelColor: Theme.of(context).colorScheme.primary,
-                            progressIndicatorColor: Theme.of(
-                              context,
-                            ).colorScheme.primary,
                             userRole: 'OPLEIDER',
                             buttonStates: buttonStates,
                             buttonInitiators: buttonInitiators,
@@ -526,15 +614,12 @@ class _TeacherScreenState extends State<TeacherScreen> {
                             databaseService: databaseService,
                           ),
                           const SizedBox(height: 8),
-                          PhoneButton(
+                          GriButton(
                             buttonName: 'DVL',
                             buttonColor: Theme.of(
                               context,
                             ).colorScheme.onPrimary,
                             labelColor: Theme.of(context).colorScheme.primary,
-                            progressIndicatorColor: Theme.of(
-                              context,
-                            ).colorScheme.primary,
                             userRole: 'OPLEIDER',
                             buttonStates: buttonStates,
                             buttonInitiators: buttonInitiators,
@@ -550,15 +635,12 @@ class _TeacherScreenState extends State<TeacherScreen> {
                     Expanded(
                       child: Column(
                         children: <Widget>[
-                          PhoneButton(
+                          GriButton(
                             buttonName: 'Tunnel Operator',
                             buttonColor: Theme.of(
                               context,
                             ).colorScheme.onPrimary,
                             labelColor: Theme.of(context).colorScheme.primary,
-                            progressIndicatorColor: Theme.of(
-                              context,
-                            ).colorScheme.primary,
                             userRole: 'OPLEIDER',
                             buttonStates: buttonStates,
                             buttonInitiators: buttonInitiators,
@@ -566,15 +648,12 @@ class _TeacherScreenState extends State<TeacherScreen> {
                             databaseService: databaseService,
                           ),
                           const SizedBox(height: 8),
-                          PhoneButton(
+                          GriButton(
                             buttonName: 'BuurTRDL',
                             buttonColor: Theme.of(
                               context,
                             ).colorScheme.onPrimary,
                             labelColor: Theme.of(context).colorScheme.primary,
-                            progressIndicatorColor: Theme.of(
-                              context,
-                            ).colorScheme.primary,
                             userRole: 'OPLEIDER',
                             buttonStates: buttonStates,
                             buttonInitiators: buttonInitiators,
@@ -582,15 +661,12 @@ class _TeacherScreenState extends State<TeacherScreen> {
                             databaseService: databaseService,
                           ),
                           const SizedBox(height: 8),
-                          PhoneButton(
+                          GriButton(
                             buttonName: 'Mdw Rangeren',
                             buttonColor: Theme.of(
                               context,
                             ).colorScheme.onPrimary,
                             labelColor: Theme.of(context).colorScheme.primary,
-                            progressIndicatorColor: Theme.of(
-                              context,
-                            ).colorScheme.primary,
                             userRole: 'OPLEIDER',
                             buttonStates: buttonStates,
                             buttonInitiators: buttonInitiators,
@@ -598,15 +674,12 @@ class _TeacherScreenState extends State<TeacherScreen> {
                             databaseService: databaseService,
                           ),
                           const SizedBox(height: 8),
-                          PhoneButton(
+                          GriButton(
                             buttonName: 'Brugwachter',
                             buttonColor: Theme.of(
                               context,
                             ).colorScheme.onPrimary,
                             labelColor: Theme.of(context).colorScheme.primary,
-                            progressIndicatorColor: Theme.of(
-                              context,
-                            ).colorScheme.primary,
                             userRole: 'OPLEIDER',
                             buttonStates: buttonStates,
                             buttonInitiators: buttonInitiators,
@@ -614,33 +687,35 @@ class _TeacherScreenState extends State<TeacherScreen> {
                             databaseService: databaseService,
                           ),
                           const SizedBox(height: 8),
-                          McnButton(
+                          GriButton(
+                            buttonName: 'MCN',
+                            buttonColor: Theme.of(
+                              context,
+                            ).colorScheme.primaryContainer,
+                            labelColor: Theme.of(context).colorScheme.primary,
                             userRole: 'OPLEIDER',
                             buttonStates: buttonStates,
                             buttonInitiators: buttonInitiators,
                             buttonDetails: buttonDetails,
                             databaseService: databaseService,
-                            onShowMcnCallSheet: () async {
-                              await showMcnCallSheet(
+                            onPressed: () async {
+                              await showMcnModal(
                                 context: context,
                                 userRole: 'OPLEIDER',
                                 databasePath: path,
                                 mcnController: _mcnController,
-                                title: 'Bel als MCN van...',
+                                title: 'Bel naar MCN...',
                                 hintText: 'TREIN',
                               );
                             },
                           ),
                           const SizedBox(height: 8),
-                          PhoneButton(
+                          GriButton(
                             buttonName: 'Overig',
                             buttonColor: Theme.of(
                               context,
                             ).colorScheme.onPrimary,
                             labelColor: Theme.of(context).colorScheme.primary,
-                            progressIndicatorColor: Theme.of(
-                              context,
-                            ).colorScheme.primary,
                             userRole: 'OPLEIDER',
                             buttonStates: buttonStates,
                             buttonInitiators: buttonInitiators,
@@ -656,40 +731,48 @@ class _TeacherScreenState extends State<TeacherScreen> {
                 Row(
                   children: <Widget>[
                     Expanded(
-                      child: AlarmButton(
+                      child: GriButton(
+                        buttonName: 'ALARM',
                         userRole: 'OPLEIDER',
                         buttonStates: buttonStates,
                         buttonInitiators: buttonInitiators,
                         buttonDetails: buttonDetails,
                         databaseService: databaseService,
+                        buttonColor: Theme.of(context).colorScheme.primary,
+                        labelColor: Theme.of(context).colorScheme.onPrimary,
                         onPressed: () async {
-                          await showAlarmCallSheet(
+                          await showAlarmModal(
                             context: context,
                             userRole: 'OPLEIDER',
                             databasePath: path,
                             mcnController: _alarmMcnController,
-                            title: 'Alarmeer als MCN van...',
-                            hintText: 'TREIN',
+                            title: 'Alarmgebied',
+                            hintText: 'Kies gebied',
                           );
                         },
                       ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: GeneralButton(
+                      child: GriButton(
+                        buttonName: 'ALGEMEEN',
                         userRole: 'OPLEIDER',
                         buttonStates: buttonStates,
                         buttonInitiators: buttonInitiators,
                         buttonDetails: buttonDetails,
                         databaseService: databaseService,
+                        buttonColor: Theme.of(
+                          context,
+                        ).colorScheme.primaryContainer,
+                        labelColor: Theme.of(context).colorScheme.primary,
                         onPressed: () async {
-                          await showGeneralCallSheet(
+                          await showGeneralModal(
                             context: context,
                             userRole: 'OPLEIDER',
                             databasePath: path,
                             mcnController: _mcnController,
                             title: 'Algemene Oproep',
-                            hintText: 'TREIN',
+                            hintText: 'Kies gebied',
                           );
                         },
                       ),

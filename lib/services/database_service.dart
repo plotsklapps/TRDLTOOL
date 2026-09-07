@@ -240,4 +240,14 @@ class DatabaseService {
       <String, dynamic>{'status': 'cancelled'},
     );
   }
+
+  Future<void> clearAllDeis(String callerRole) async {
+    final DateTime now = DateTime.now();
+    final String formattedDate = DateFormat('yyyy-MM-dd').format(now);
+    final String code = (callerRole == 'LEERLING')
+        ? sCodeLeerling.value
+        : sCodeOpleider.value;
+
+    await _database.child('$formattedDate/$code/deis').remove();
+  }
 }
