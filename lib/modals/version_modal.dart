@@ -1,5 +1,5 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:trdltool/modals/base_modal.dart';
 import 'package:trdltool/signals/version_signal.dart';
@@ -31,6 +31,18 @@ class VersionModal extends SignalWidget {
             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
+          ListTile(
+            onTap: _launchGitHub,
+            leading: const Icon(LucideIcons.fileCodeCorner),
+            title: const Text('Versie 0.0.2+9 20260919'),
+            subtitle: const Text(
+              '- Flutter upgrade naar 3.47.5;\n'
+              '- Dependency material_ui toegevoegd, project refactor;\n'
+              '- Flex_color_scheme package naar 9.0.0;\n'
+              '- Vervangen flutter/material.dart door material_ui;\n'
+              '- Dependencies in pubspec.lock geupgraded.',
+            ),
+          ),
           ListTile(
             onTap: _launchGitHub,
             leading: const Icon(LucideIcons.fileCodeCorner),
