@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:trdltool/modals/base_modal.dart';
 import 'package:trdltool/signals/version_signal.dart';
