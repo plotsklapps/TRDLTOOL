@@ -1,10 +1,10 @@
 import 'dart:async';
 
 import 'package:firebase_database/firebase_database.dart';
-import 'package:material_ui/material_ui.dart';
 import 'package:intl/intl.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:trdltool/logic/modal_logic.dart';
 import 'package:trdltool/modals/alarm_modal.dart';

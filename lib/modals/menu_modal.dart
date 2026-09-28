@@ -1,5 +1,5 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:trdltool/logic/modal_logic.dart';
 import 'package:trdltool/modals/base_modal.dart';
